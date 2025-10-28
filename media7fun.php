@@ -1,23 +1,23 @@
 <?php
 
+// muestra resultados del juego
 function mostrarResultados($jugadores, $cartasJugadores, $puntos, $ganadores, $premios, $apuesta)
 {
-
     echo "<h2>Resultados del juego</h2>";
 
-    // mostrar cartas y puntos de cada jugador
-    for ($i = 0; $i < count($jugadores); $i++) {
-        echo "<h3>" . $jugadores[$i] . "</h3>";
+    // muestro cartas y puntos de cada jugador
+    foreach ($jugadores as $nombre) {
+        echo "<h3>$nombre</h3>";
         echo "<p>Cartas: ";
-        foreach ($cartasJugadores[$i] as $carta) {
-            echo "<img src='images/" . $carta . ".PNG' alt='" . $carta . "' width='50'> ";
+        foreach ($cartasJugadores[$nombre] as $carta) {
+            echo "<img src='images/" . $carta . ".PNG' alt='$carta' width='50'> ";
         }
         echo "</p>";
-        echo "<p>Puntos: " . $puntos[$i] . "</p>";
-        echo "<p>Premio: " . number_format($premios[$i], 2) . "</p>";
+        echo "<p>Puntos: " . $puntos[$nombre] . "</p>";
+        echo "<p>Premio: " . (isset($premios[$nombre]) ? number_format($premios[$nombre], 2) : 0) . " €</p>";
     }
 
-    // mostrar ganadores
+    // muestro ganadores
     if (count($ganadores) > 0) {
         echo "<h2>Ganador(es): " . implode(", ", $ganadores) . "</h2>";
     } else {
@@ -25,15 +25,14 @@ function mostrarResultados($jugadores, $cartasJugadores, $puntos, $ganadores, $p
     }
 }
 
-// funcion que suma los puntos de las cartas
+
+// calcula los puntos de las cartas
 function calcularPuntos($cartas)
 {
     $total = 0;
     foreach ($cartas as $carta) {
-        // quito el palo y me quedo con el numero o letra
-        $valor = substr($carta, 0, -1);
+        $valor = substr($carta, 0, -1); // quito el palo
 
-        // segun lo que sea sumo los puntos
         if ($valor == "1") {
             $total += 1;
         } elseif ($valor == "J" || $valor == "Q" || $valor == "K") {
@@ -42,13 +41,15 @@ function calcularPuntos($cartas)
             $total += $valor;
         }
     }
-    return round($total, 1); // redondeo a un decimal
+    return round($total, 1);
 }
 
 
-// reparte cartas a los jugadores sin repetir
+// reparte cartas sin repetir
+// reparte cartas sin repetir
 function repartirCartas($numCartas, $jugadores)
 {
+    // mazo completo
     $mazo = [
         "1D",
         "1C",
@@ -91,56 +92,65 @@ function repartirCartas($numCartas, $jugadores)
         "KP",
         "KT"
     ];
-    shuffle($mazo); // mezclo el mazo
-    $cartasJugadores = [];
 
-    // reparto sin repetir
-    for ($i = 0; $i < count($jugadores); $i++) {
-        $cartasJugadores[$i] = array_splice($mazo, 0, $numCartas);
+    // barajar el mazo
+    shuffle($mazo);
+
+    $cartasJugadores = [];
+    $indice = 0;
+
+    // repartir a cada jugador
+    foreach ($jugadores as $nombre) {
+        $cartasJugadores[$nombre] = [];
+        for ($i = 0; $i < $numCartas; $i++) {
+            $cartasJugadores[$nombre][] = $mazo[$indice];
+            $indice++;
+        }
     }
 
     return $cartasJugadores;
 }
 
 
+
 // mira quien gana y cuanto gana
-// devuelve array de array con nombres de ganadores y premios
 function determinarGanadores($jugadores, $puntos, $apuesta)
 {
-    $premios = [0, 0, 0, 0];
+    $premios = [];
     $ganadores = [];
     $ganan = [];
 
     // primero miro si alguno tiene 7.5 exacto
-    for ($i = 0; $i < count($jugadores); $i++) {
-        if ($puntos[$i] == 7.5)
-            $ganan[] = $i;
+    foreach ($jugadores as $nombre) {
+        if ($puntos[$nombre] == 7.5) {
+            $ganan[] = $nombre;
+        }
     }
 
-    // si nadie tiene 7.5 miro quien tiene el maximo sin pasarse
+    // si nadie tiene 7.5 miro el max sin pasarse
     if (count($ganan) == 0) {
         $max = 0;
-        for ($i = 0; $i < count($jugadores); $i++) {
-            if ($puntos[$i] <= 7.5 && $puntos[$i] > $max) {
-                $max = $puntos[$i];
+        foreach ($jugadores as $nombre) {
+            if ($puntos[$nombre] <= 7.5 && $puntos[$nombre] > $max) {
+                $max = $puntos[$nombre];
             }
         }
-        for ($i = 0; $i < count($jugadores); $i++) {
-            if ($puntos[$i] == $max) {
-                $ganan[] = $i;
+        foreach ($jugadores as $nombre) {
+            if ($puntos[$nombre] == $max) {
+                $ganan[] = $nombre;
             }
         }
-        $reparto = $apuesta * count($jugadores) * 0.5; // menos premio si nadie llega a 7.5
+        $reparto = $apuesta * count($jugadores) * 0.5;
     } else {
-        $reparto = $apuesta * count($jugadores) * 0.8; // premio mayor si hay 7.5
+        $reparto = $apuesta * count($jugadores) * 0.8;
     }
 
-    // reparto lo que toque
+    // reparto premio
     if (count($ganan) > 0) {
         $porJugador = $reparto / count($ganan);
-        foreach ($ganan as $i) {
-            $premios[$i] = $porJugador;
-            $ganadores[] = $jugadores[$i];
+        foreach ($ganan as $nombre) {
+            $premios[$nombre] = $porJugador;
+            $ganadores[] = $nombre;
         }
     }
 
@@ -148,7 +158,7 @@ function determinarGanadores($jugadores, $puntos, $apuesta)
 }
 
 
-// limpiar datos del formulario
+// limpia los datos del formulario
 function limpiar($dato)
 {
     return htmlspecialchars(trim($dato));
