@@ -47,7 +47,7 @@ function calcularPuntos($cartas)
 
 
 // reparte cartas a los jugadores sin repetir
-function repartirCartas($numCartas)
+function repartirCartas($numCartas, $jugadores)
 {
     $mazo = [
         "1D",
@@ -95,7 +95,7 @@ function repartirCartas($numCartas)
     $cartasJugadores = [];
 
     // reparto sin repetir
-    for ($i = 0; $i < 4; $i++) {
+    for ($i = 0; $i < count($jugadores); $i++) {
         $cartasJugadores[$i] = array_splice($mazo, 0, $numCartas);
     }
 

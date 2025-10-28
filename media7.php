@@ -16,7 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $apuesta   = (float)limpiar($_POST["apuesta"]);
 
     // Repartir cartas
-    $cartasJugadores = repartirCartas($numcartas);
+    $cartasJugadores = repartirCartas($numcartas, $jugadores);
 
     // Calcular puntos
     $puntos = [];
