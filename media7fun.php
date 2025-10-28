@@ -112,7 +112,7 @@ function determinarGanadores($jugadores, $puntos, $apuesta)
     $ganan = [];
 
     // primero miro si alguno tiene 7.5 exacto
-    for ($i = 0; $i < 4; $i++) {
+    for ($i = 0; $i < count($jugadores); $i++) {
         if ($puntos[$i] == 7.5)
             $ganan[] = $i;
     }
@@ -120,19 +120,19 @@ function determinarGanadores($jugadores, $puntos, $apuesta)
     // si nadie tiene 7.5 miro quien tiene el maximo sin pasarse
     if (count($ganan) == 0) {
         $max = 0;
-        for ($i = 0; $i < 4; $i++) {
+        for ($i = 0; $i < count($jugadores); $i++) {
             if ($puntos[$i] <= 7.5 && $puntos[$i] > $max) {
                 $max = $puntos[$i];
             }
         }
-        for ($i = 0; $i < 4; $i++) {
+        for ($i = 0; $i < count($jugadores); $i++) {
             if ($puntos[$i] == $max) {
                 $ganan[] = $i;
             }
         }
-        $reparto = $apuesta * 4 * 0.5; // menos premio si nadie llega a 7.5
+        $reparto = $apuesta * count($jugadores) * 0.5; // menos premio si nadie llega a 7.5
     } else {
-        $reparto = $apuesta * 4 * 0.8; // premio mayor si hay 7.5
+        $reparto = $apuesta * count($jugadores) * 0.8; // premio mayor si hay 7.5
     }
 
     // reparto lo que toque
