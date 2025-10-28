@@ -104,6 +104,7 @@ function repartirCartas($numCartas)
 
 
 // mira quien gana y cuanto gana
+// devuelve array de array con nombres de ganadores y premios
 function determinarGanadores($jugadores, $puntos, $apuesta)
 {
     $premios = [0, 0, 0, 0];
@@ -112,7 +113,8 @@ function determinarGanadores($jugadores, $puntos, $apuesta)
 
     // primero miro si alguno tiene 7.5 exacto
     for ($i = 0; $i < 4; $i++) {
-        if ($puntos[$i] == 7.5) $ganan[] = $i;
+        if ($puntos[$i] == 7.5)
+            $ganan[] = $i;
     }
 
     // si nadie tiene 7.5 miro quien tiene el maximo sin pasarse
