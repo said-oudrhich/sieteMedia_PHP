@@ -14,4 +14,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Número de cartas y apuesta
     $numcartas = (int)limpiar($_POST["numcartas"]);
     $apuesta   = (float)limpiar($_POST["apuesta"]);
+
+    // Repartir cartas
+    $cartasJugadores = repartirCartas($numcartas);
+
+    // Calcular puntos
+    $puntos = [];
+    foreach ($cartasJugadores as $cartas) {
+        $puntos[] = calcularPuntos($cartas);
+    }
+
+    // Determinar ganadores
+    $ganadores = determinarGanadores($jugadores, $puntos, $apuesta);
+    mostrarResultado($jugadores, $cartasJugadores, $puntos, $ganadores, $apuesta, $premios);
 }
