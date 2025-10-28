@@ -1,12 +1,12 @@
 <?php
 
-function mostrarResultado($jugadores, $cartasJugadores, $puntos, $ganadores, $apuesta, $premios)
+function mostrarResultados($jugadores, $cartasJugadores, $puntos, $ganadores, $premios, $apuesta)
 {
 
     echo "<h2>Resultados del juego</h2>";
 
     // mostrar cartas y puntos de cada jugador
-    for ($i = 0; $i < 4; $i++) {
+    for ($i = 0; $i < count($jugadores); $i++) {
         echo "<h3>" . $jugadores[$i] . "</h3>";
         echo "<p>Cartas: ";
         foreach ($cartasJugadores[$i] as $carta) {
@@ -30,8 +30,6 @@ function calcularPuntos($cartas)
 {
     $total = 0;
     foreach ($cartas as $carta) {
-        // quito la extension y paso a mayus
-        $carta = strtoupper(str_replace(".PNG", "", $carta));
         // quito el palo y me quedo con el numero o letra
         $valor = substr($carta, 0, -1);
 

@@ -26,5 +26,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Determinar ganadores
     $ganadores = determinarGanadores($jugadores, $puntos, $apuesta);
-    mostrarResultado($jugadores, $cartasJugadores, $puntos, $ganadores, $apuesta, $premios);
+    mostrarResultados($jugadores, $cartasJugadores, $puntos, $ganadores[0], $ganadores[1], $apuesta);
 }
