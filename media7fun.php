@@ -1,32 +1,92 @@
 <?php
 
-// muestra resultados del juego
+// muestra resultados del juego en una tabla
+// @param array $jugadores
+// @param array $cartasJugadores
+// @param array $puntos
+// @param array $ganadores
+// @param array $premios
+// @param float $apuesta
+// @return void
 function mostrarResultados($jugadores, $cartasJugadores, $puntos, $ganadores, $premios, $apuesta)
 {
     echo "<h2>Resultados del juego</h2>";
 
+    // tabla con todos los datos
+    echo "<table border='1' cellspacing='0' cellpadding='6'>";
+    echo "<tr><th>Jugador</th><th>Cartas</th><th>Puntos</th><th>Premio (€)</th></tr>";
+
     // muestro cartas y puntos de cada jugador
     foreach ($jugadores as $nombre) {
-        echo "<h3>$nombre</h3>";
-        echo "<p>Cartas: ";
+        echo "<tr>";
+        echo "<td>$nombre</td>";
+        echo "<td>";
         foreach ($cartasJugadores[$nombre] as $carta) {
             echo "<img src='images/" . $carta . ".PNG' alt='$carta' width='50'> ";
         }
-        echo "</p>";
-        echo "<p>Puntos: " . $puntos[$nombre] . "</p>";
-        echo "<p>Premio: " . (isset($premios[$nombre]) ? number_format($premios[$nombre], 2) : 0) . " €</p>";
+        echo "</td>";
+        echo "<td>" . $puntos[$nombre] . "</td>";
+        echo "<td>" . (isset($premios[$nombre]) ? number_format($premios[$nombre], 2) : "0.00") . "</td>";
+        echo "</tr>";
     }
 
-    // muestro ganadores
+    echo "</table>";
+
+    // muestro ganadores o mensaje si no hay
     if (count($ganadores) > 0) {
         echo "<h2>Ganador(es): " . implode(", ", $ganadores) . "</h2>";
     } else {
-        echo "<h2>No hay ganadores</h2>";
+        $bote = number_format($apuesta * count($jugadores), 2);
+        echo "<h2>No hay ganadores, se añade al bote $bote €</h2>";
     }
 }
 
+//**************************************************************************************************************************************************
+// obtiene las iniciales de un nombre
+// @param string $nombre
+// @return string
+function obtenerIniciales($nombre)
+{
+    $partes = explode(" ", $nombre);
+    $iniciales = "";
+    foreach ($partes as $parte) {
+        $iniciales .= strtoupper(substr($parte, 0, 1));
+    }
+    return $iniciales;
+}
 
+//**************************************************************************************************************************************************
+// guarda los resultados en un fichero de texto
+// @param array $jugadores
+// @param array $puntos
+// @param array $ganadores
+// @param array $premios
+// @param float $apuesta
+// @return void
+function guardarResultados($jugadores, $puntos, $ganadores, $premios)
+{
+    $nombreArchivo = "apuestas_" . date("dmYHis") . ".txt";
+    $ruta = "Ficheros/$nombreArchivo";
+    $archivo = fopen($ruta, "w");
+
+    $contadorGanadores = 0;
+    foreach ($jugadores as $nombre) {
+        $punto = $puntos[$nombre];
+        $premio = isset($premios[$nombre]) ? $premios[$nombre] : "0.00";
+        $linea = obtenerIniciales($nombre) . "#" . $punto . "#" . $premio . "\n";
+        fwrite($archivo, $linea);
+
+        if (in_array($nombre, $ganadores))
+            $contadorGanadores++;
+    }
+    fwrite($archivo, "TOTAL PREMIOS#$contadorGanadores#" . array_sum($premios) . "\n");
+    fclose($archivo);
+}
+
+//**************************************************************************************************************************************************
 // calcula los puntos de las cartas
+// @param array $cartas
+// @return float
 function calcularPuntos($cartas)
 {
     $total = 0;
@@ -44,9 +104,11 @@ function calcularPuntos($cartas)
     return round($total, 1);
 }
 
-
+//**************************************************************************************************************************************************
 // reparte cartas sin repetir
-// reparte cartas sin repetir
+// @param int $numCartas
+// @param array $jugadores
+// @return array
 function repartirCartas($numCartas, $jugadores)
 {
     // mazo completo
@@ -111,33 +173,41 @@ function repartirCartas($numCartas, $jugadores)
     return $cartasJugadores;
 }
 
-
-
+//**************************************************************************************************************************************************
 // mira quien gana y cuanto gana
+// @param array $jugadores
+// @param array $puntos
+// @param float $apuesta
+// @return array
 function determinarGanadores($jugadores, $puntos, $apuesta)
 {
     $premios = [];
     $ganadores = [];
-    $ganan = [];
 
-    // primero miro si alguno tiene 7.5 exacto
-    foreach ($jugadores as $nombre) {
-        if ($puntos[$nombre] == 7.5) {
-            $ganan[] = $nombre;
+    // ordeno los puntos de mayor a menor sin perder nombres
+    arsort($puntos);
+
+    // miro si hay alguno con 7.5 justo
+    $hayExacto = false;
+    foreach ($puntos as $nombre => $valor) {
+        if ($valor == 7.5) {
+            $hayExacto = true;
+            $ganadores[] = $nombre;
         }
     }
 
-    // si nadie tiene 7.5 miro el max sin pasarse
-    if (count($ganan) == 0) {
+    // si no hay 7.5 busco el mas alto sin pasarse
+    if (!$hayExacto) {
         $max = 0;
-        foreach ($jugadores as $nombre) {
-            if ($puntos[$nombre] <= 7.5 && $puntos[$nombre] > $max) {
-                $max = $puntos[$nombre];
+        foreach ($puntos as $nombre => $valor) {
+            if ($valor <= 7.5 && $valor > $max) {
+                $max = $valor;
             }
         }
-        foreach ($jugadores as $nombre) {
-            if ($puntos[$nombre] == $max) {
-                $ganan[] = $nombre;
+        // vuelvo a mirar quienes tienen ese max
+        foreach ($puntos as $nombre => $valor) {
+            if ($valor == $max) {
+                $ganadores[] = $nombre;
             }
         }
         $reparto = $apuesta * count($jugadores) * 0.5;
@@ -145,20 +215,21 @@ function determinarGanadores($jugadores, $puntos, $apuesta)
         $reparto = $apuesta * count($jugadores) * 0.8;
     }
 
-    // reparto premio
-    if (count($ganan) > 0) {
-        $porJugador = $reparto / count($ganan);
-        foreach ($ganan as $nombre) {
+    // reparto premio entre los ganadores
+    if (count($ganadores) > 0) {
+        $porJugador = $reparto / count($ganadores);
+        foreach ($ganadores as $nombre) {
             $premios[$nombre] = $porJugador;
-            $ganadores[] = $nombre;
         }
     }
 
     return [$ganadores, $premios];
 }
 
-
+//**************************************************************************************************************************************************
 // limpia los datos del formulario
+// @param string $dato
+// @return string
 function limpiar($dato)
 {
     return htmlspecialchars(trim($dato));

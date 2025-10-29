@@ -29,4 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // mostrar todo
     mostrarResultados($jugadores, $cartasJugadores, $puntos, $ganadores, $premios, $apuesta);
+
+    // guardar resultados
+    guardarResultados($jugadores, $puntos, $ganadores, $premios);
 }
